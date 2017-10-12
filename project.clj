@@ -9,6 +9,7 @@
                  [reagent "0.7.0"]
                  [re-frame "0.10.2-beta1"]
                  [re-frisk "0.5.0"]
+                 [secretary "1.2.3"]
                  [cljs-http "0.1.43"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
