@@ -1,4 +1,5 @@
-
+## Screenshot
+![example](/screenshot.jpg?raw=true)
 ### Development mode
 
 To start the Figwheel compiler, navigate to the project folder and run the following command in the terminal:
@@ -12,6 +13,11 @@ Once Figwheel starts up, you should be able to open the `public/index.html` page
 
 
 ### Building for production
+
+```
+yarn build
+yarn deploy
+```
 
 ```
 lein clean

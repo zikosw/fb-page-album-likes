@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "request": "^2.83.0"
+  "scripts":{
+    "build":"lein cljsbuild once release",
+    "deploy":"firebase deploy"
   }
 }
