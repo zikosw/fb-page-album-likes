@@ -2,9 +2,9 @@
 ![example](/screenshot.jpg?raw=true)
 ### Development mode
 
-This project require Java and [Leiningen](https://leiningen.org/) for automating Clojure projects without setting your hair on fire.
+This project requires Java and [Leiningen](https://leiningen.org/) for automating Clojure projects without setting your hair on fire.
 
-To install lein follow step below.
+To install lein, follow step below.
 1. Download the lein script.
 2. Move script to `$PATH` your shell can execute it (eg. `~/bin`)
 3. Make script executable.
