@@ -34,8 +34,14 @@
     (do
       (rf/dispatch [:routes/set-active-panel :page-panel])
       (rf/dispatch [:api/set-access-token token])
-      ;(prn :route-page-id page-id)))
       (rf/dispatch [:page/get-albums page-id])))
+
+  (defroute photo-route "/photos/:token/:page-id" {token :token
+                                                   page-id :page-id}
+            (do
+              (rf/dispatch [:routes/set-active-panel :page-panel])
+              (rf/dispatch [:api/set-access-token token])
+              (rf/dispatch [:page/get-photos page-id])))
 
   (hook-browser-navigation!))
 
@@ -45,7 +51,14 @@
   (let [albums @(rf/subscribe [:page/get-albums])]
     [:div
      [:h2 "Welcome"]
-     [:h5 "/#/page/<token>/<page-id>"]
+
+     [:p "for page albums go to "
+      [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
+      " - eg. "
+      [:a {:href "/#/page/USER-TOKEN/IRoamAlone"} "/#/page/EXAMPLE-USER-TOKEN/IRoamAlone"]]
+
+     [:p "for page photos go to "
+       [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]]
      [:a {:href "https://developers.facebook.com/tools/accesstoken/"} "Get a token here"]
      [:hr]
      [:div {:style {:display "flex"
@@ -59,19 +72,9 @@
                          [:a {:href (str "http://fb.com/" id) :target "_blank"}
                            [:img {:src cover :height 200}]]
                          [:div
-                          [:p (str name " ♥ " likes)]]])]
-     [:div
-      [:input {:type "text" :on-change #(rf/dispatch [:api/set-access-token (-> % .-target .-value)])}]]]))
-
-;; ---------- APP -----------
-(defn ex-fetch []
-  (go (let [response (<! (http/get "https://api.github.com/users"
-                                   {:with-credentials? false
-                                    :query-params {"since" 135}}))
-            res-status (:status response)
-            body (:body response)]
-        (prn :status res-status)
-        (prn :users (map :login body)))))
+                          [:p (str name " ♥ " likes)]]])]]
+   #_[:div
+      [:input {:type "text" :on-change #(rf/dispatch [:api/set-access-token (-> % .-target .-value)])}]]))
 
 ;; -------------------------
 ;; Initialize app

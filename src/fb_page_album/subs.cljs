@@ -2,13 +2,17 @@
   (:require [re-frame.core :as rf]))
 
 (comment
-  @(rf/subscribe [:page/get-albums]))
+  (->> (get-in @re-frame.db/app-db [:albums])
+       (sort-by :likes))
+  @(rf/subscribe [:page/get-albums "cupemag"]))
+
+
 
 (rf/reg-sub
   :page/get-albums
   (fn [db _]
-    (->> (get db :albums)
-         (map second)
+    (->> (get-in db [:albums])
+         ;(map second)
          (sort-by :likes)
          reverse)))
 
