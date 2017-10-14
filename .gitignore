@@ -18,3 +18,4 @@ pom.xml.asc
 node_modules/
 .idea/
 public/js/out
+*.swp
