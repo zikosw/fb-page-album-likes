@@ -14,10 +14,19 @@
   (reset! re-frame.db/app-db {})
   (rf/subscribe [:api/get-access-token]))
 
+(comment
+  (reset! re-frame.db/app-db {})
+  (rf/subscribe [:api/get-page-id]))
+
 (rf/reg-event-db
   :api/set-access-token
   (fn [db [_ token]]
     (assoc db :api/access-token token)))
+
+(rf/reg-event-db
+  :api/set-page
+  (fn [db [_ page-id]]
+    (assoc db :api/page-id page-id)))
 
 (def fb-graph-url "https://graph.facebook.com/")
 

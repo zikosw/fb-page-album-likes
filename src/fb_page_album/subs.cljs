@@ -20,3 +20,8 @@
   :api/get-access-token
   (fn [db _]
     (get db :api/access-token)))
+
+(rf/reg-sub
+  :api/get-page
+  (fn [db _]
+    (get db :api/page-id)))
