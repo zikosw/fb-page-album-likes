@@ -46,11 +46,14 @@
   (hook-browser-navigation!))
 
 ;; Views
-
 (defn home-page []
-  (let [albums @(rf/subscribe [:page/get-albums])]
+  (let [albums @(rf/subscribe [:page/get-albums])
+        logged-in? @(rf/subscribe [:fb/logged-in?])]
     [:div
      [:h2 "Welcome"]
+     (if logged-in?
+       [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]
+       [:button {:on-click #(rf/dispatch [:fb/login])} "Login"])
 
      [:p "for page albums go to "
       [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
@@ -59,12 +62,8 @@
 
      [:p "for page photos go to "
        [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]]
-     [:a {:href "https://developers.facebook.com/tools/accesstoken/"} "Get a token here"]
      [:hr]
    [:div
-      [:input {:type "text"
-               :placeholder "Facebook Token Here"
-               :on-change #(rf/dispatch [:api/set-access-token (-> % .-target .-value)])}]
       [:input {:type "text"
                :placeholder "Page identifier"
                :on-change #(rf/dispatch [:api/set-page (-> % .-target .-value)])}]
