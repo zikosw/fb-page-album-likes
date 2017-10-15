@@ -22,11 +22,11 @@
     (get db :api/access-token)))
 
 (rf/reg-sub
-  :fb/logged-in?
-  (fn [db _]
-    (get db :logged-in?)))
-
-(rf/reg-sub
   :api/get-page
   (fn [db _]
     (get db :api/page-id)))
+
+(rf/reg-sub
+  :fb/get-username
+  (fn [db _]
+    (get db :fb/username)))

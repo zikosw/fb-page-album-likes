@@ -190,26 +190,20 @@
  (fn [db [_ panel]]
    (assoc db :active-panel panel)))
 
-;;; FB
 
 ;; Logout
-(rf/reg-event-db
- :fb/set-logged-in
- (fn [db [_ value]]
-   (assoc db :logged-in? value)))
 (rf/reg-event-fx
   :fb/logout
   (fn [db [_]]
-    { :dispatch-n [[:fb/set-logged-in nil]
-                   [:api/set-access-token nil]]
+    { :dispatch [:api/set-access-token nil]
+      :clear-item []
       :fb/logout []
       :db       db}))
 
 (rf/reg-fx
   :fb/logout
   (fn [_]
-    (let [fb (aget js/window "FB")]
-      (.logout fb))))
+    (.logout js/FB)))
 
 ;;Login
 (rf/reg-event-fx
@@ -227,15 +221,21 @@
               status (:status clj-response)
               auth-response (:authResponse clj-response)]
           (if (= status "connected")
-            (rf/dispatch [:fb/login-success (:accessToken auth-response)])
+            (rf/dispatch [:fb/check-token-valid (:accessToken auth-response)])
             (prn "Unauthorized")))))))
+
+(rf/reg-event-db
+ :fb/set-username
+ (fn [db [_ username]]
+   (assoc db :fb/username username)))
 
 (rf/reg-event-fx
   :fb/login-success
   []
-  (fn [{:keys [db]} [_ value]]
-    { :dispatch-n [[:fb/set-logged-in true]
-                   [:api/set-access-token value]]
+  (fn [{:keys [db]} [_ token username]]
+    { :dispatch-n [[:api/set-access-token token]
+                   [:fb/set-username username]]
+      :set-item ["access-token" token]
       :db       db}))
 
 ;;Get Login Status
@@ -256,3 +256,58 @@
           (if (= status "connected")
             (rf/dispatch [:api/set-access-token (:accessToken auth-response)])
             (rf/dispatch [:fb/login])))))))
+
+;;Check Token is valid?
+(defn check-token-valid [access-token]
+  (let [result (chan)]
+    (go (let [response (<! (http/get (str fb-graph-url "me")
+                                     {:with-credentials? false
+                                      :query-params {"access_token" access-token}}))
+              res-status (:status response)
+              body (:body response)
+              username (:name body)]
+          (>! result {:status res-status :username username})))
+    result))
+
+(rf/reg-fx
+  :fb/check-token-valid
+  (fn [{:keys [response-handler access-token]}]
+    (go
+      (response-handler (<! (check-token-valid access-token))))))
+
+(rf/reg-event-fx
+  :fb/check-token-valid
+  (fn [{:keys [db]} [_ access-token]]
+    {:fb/check-token-valid {:response-handler (fn [{:keys [status username]}]
+                                                (if (= status 200)
+                                                  (rf/dispatch [:fb/login-success access-token username])
+                                                  (rf/dispatch [:fb/logout])))
+                            :access-token     access-token}}))
+
+;;Init user
+(rf/reg-event-fx
+  :fb/init-user
+  (fn [{:keys [db]} [_]]
+    {:get-item ["access-token" (fn [token]
+                                  (if token (rf/dispatch [:fb/check-token-valid token])))]}))
+
+;; Local Storage
+(rf/reg-fx
+  :clear-item
+  (fn [_]
+    (.clear js/localStorage #(prn :clear-storage-done))))
+
+(rf/reg-fx
+  :set-item
+  (fn [param]
+    (let [[k v] param]
+      (.setItem js/localStorage k v))))
+
+(rf/reg-fx
+  :get-item
+  (fn [param]
+    (let [[k f] param]
+      (-> js/localStorage
+        (.getItem k)
+        (js->clj :keywordize-keys true)
+        (f)))))
