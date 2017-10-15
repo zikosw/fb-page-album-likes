@@ -11,6 +11,7 @@
             [cljs-http.client :as http]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.pprint :refer [pprint]]
+            [fb-page-album.config :as config]
             [fb-page-album.events]
             [fb-page-album.subs]
             [fb-page-album.db]))
@@ -96,11 +97,16 @@
 ;; -------------------------
 ;; Initialize app
 
+(defn dev-setup []
+  (when config/debug?
+    (enable-re-frisk!)
+    (println "dev mode")))
+
 (defn mount-root []
   (r/render [home-page] (.getElementById js/document "app")))
 
 (defn init! []
   (app-routes)
   (rf/dispatch-sync [:initialize])
-  (enable-re-frisk!)
+  (dev-setup)
   (mount-root))
