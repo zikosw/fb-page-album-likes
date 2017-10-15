@@ -189,3 +189,71 @@
  :routes/set-active-panel
  (fn [db [_ panel]]
    (assoc db :active-panel panel)))
+
+;;; FB
+
+;; Logout
+(rf/reg-event-db
+ :fb/set-logged-in
+ (fn [db [_ value]]
+   (assoc db :logged-in? value)))
+(rf/reg-event-fx
+  :fb/logout
+  (fn [db [_]]
+    { :dispatch-n [[:fb/set-logged-in nil]
+                   [:api/set-access-token nil]]
+      :fb/logout []
+      :db       db}))
+
+(rf/reg-fx
+  :fb/logout
+  (fn [_]
+    (let [fb (aget js/window "FB")]
+      (.logout fb))))
+
+;;Login
+(rf/reg-event-fx
+  :fb/login
+  (fn [db [_]]
+    {:fb/login []}))
+
+(rf/reg-fx
+  :fb/login
+  (fn [_]
+    (let [fb (aget js/window "FB")]
+      (.login fb
+        (fn [response]
+          (let [clj-response (js->clj response :keywordize-keys true)
+                status (:status clj-response)
+                auth-response (:authResponse clj-response)]
+            (if (= status "connected")
+              (rf/dispatch [:fb/login-success (:accessToken auth-response)])
+              (prn "Unauthorized"))))))))
+
+(rf/reg-event-fx
+  :fb/login-success
+  []
+  (fn [{:keys [db]} [_ value]]
+    { :dispatch-n [[:fb/set-logged-in true]
+                   [:api/set-access-token value]]
+      :db       db}))
+
+;;Get Login Status
+(rf/reg-event-fx
+  :fb/get-login-status
+  (fn [db [_]]
+    {:fb/get-login-status []}))
+
+(rf/reg-fx
+  :fb/get-login-status
+  (fn [_]
+    (let [fb (aget js/window "FB")]
+      (-> fb
+          (.getLoginStatus
+            (fn [response]
+              (let [clj-response (js->clj response :keywordize-keys true)
+                    status (:status clj-response)
+                    auth-response (:authResponse clj-response)]
+                (if (= status "connected")
+                  (rf/dispatch [:api/set-access-token (:accessToken auth-response)])
+                  (rf/dispatch [:fb/login])))))))))

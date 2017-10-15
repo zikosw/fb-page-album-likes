@@ -46,11 +46,14 @@
   (hook-browser-navigation!))
 
 ;; Views
-
 (defn home-page []
-  (let [albums @(rf/subscribe [:page/get-albums])]
+  (let [albums @(rf/subscribe [:page/get-albums])
+        logged-in? @(rf/subscribe [:fb/logged-in?])]
     [:div
      [:h2 "Welcome"]
+     (if logged-in?
+       [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]
+       [:button {:on-click #(rf/dispatch [:fb/login])} "Login"])
 
      [:p "for page albums go to "
       [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
