@@ -62,12 +62,8 @@
 
      [:p "for page photos go to "
        [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]]
-     [:a {:href "https://developers.facebook.com/tools/accesstoken/"} "Get a token here"]
      [:hr]
    [:div
-      [:input {:type "text"
-               :placeholder "Facebook Token Here"
-               :on-change #(rf/dispatch [:api/set-access-token (-> % .-target .-value)])}]
       [:input {:type "text"
                :placeholder "Page identifier"
                :on-change #(rf/dispatch [:api/set-page (-> % .-target .-value)])}]
