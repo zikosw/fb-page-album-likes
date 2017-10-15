@@ -1,6 +1,7 @@
 {
   "scripts":{
-    "build":"lein cljsbuild once release",
+    "start":"lein figwheel",
+    "build":"lein package",
     "deploy":"firebase deploy"
   }
 }
