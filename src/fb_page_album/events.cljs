@@ -203,8 +203,7 @@
 (rf/reg-fx
   :fb/logout
   (fn [_]
-    (let [fb (aget js/window "FB")]
-      (.logout fb))))
+    (.logout js/FB)))
 
 ;;Login
 (rf/reg-event-fx
@@ -215,15 +214,15 @@
 (rf/reg-fx
   :fb/login
   (fn [_]
-    (let [fb (aget js/window "FB")]
-      (.login fb
-        (fn [response]
-          (let [clj-response (js->clj response :keywordize-keys true)
-                status (:status clj-response)
-                auth-response (:authResponse clj-response)]
-            (if (= status "connected")
-              (rf/dispatch [:fb/login-success (:accessToken auth-response)])
-              (prn "Unauthorized"))))))))
+    (.login
+      js/FB
+      (fn [response]
+        (let [clj-response (js->clj response :keywordize-keys true)
+              status (:status clj-response)
+              auth-response (:authResponse clj-response)]
+          (if (= status "connected")
+            (rf/dispatch [:fb/login-success (:accessToken auth-response)])
+            (prn "Unauthorized")))))))
 
 (rf/reg-event-fx
   :fb/login-success
@@ -242,16 +241,15 @@
 (rf/reg-fx
   :fb/get-login-status
   (fn [_]
-    (let [fb (aget js/window "FB")]
-      (-> fb
-          (.getLoginStatus
-            (fn [response]
-              (let [clj-response (js->clj response :keywordize-keys true)
-                    status (:status clj-response)
-                    auth-response (:authResponse clj-response)]
-                (if (= status "connected")
-                  (rf/dispatch [:api/set-access-token (:accessToken auth-response)])
-                  (rf/dispatch [:fb/login])))))))))
+    (.getLoginStatus
+      js/FB
+      (fn [response]
+        (let [clj-response (js->clj response :keywordize-keys true)
+              status (:status clj-response)
+              auth-response (:authResponse clj-response)]
+          (if (= status "connected")
+            (rf/dispatch [:api/set-access-token (:accessToken auth-response)])
+            (rf/dispatch [:fb/login])))))))
 
 ;;Check Token is valid?
 (defn check-token-valid [access-token]
