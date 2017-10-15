@@ -48,6 +48,7 @@
                         {:output-to "public/js/app.js"
                          :output-dir "public/js/release"
                          :asset-path   "js/out"
+                         :infer-externs true
                          :optimizations :advanced
                          :pretty-print false}}}}
 
