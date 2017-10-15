@@ -49,17 +49,20 @@
 ;; Views
 (defn home-page []
   (let [albums @(rf/subscribe [:page/get-albums])
-        logged-in? @(rf/subscribe [:api/get-access-token])]
+        logged-in? @(rf/subscribe [:api/get-access-token])
+        username @(rf/subscribe [:fb/get-username])]
     [:div
       [:h2 "Welcome"]
       (if logged-in?
-        [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]
+        [:div
+          (str "Logged in as " username " ")
+          [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]]
         [:button {:on-click #(rf/dispatch [:fb/login])} "Login"])
 
       [:p "for page albums go to "
         [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
         " - eg. "
-      [:a {:href "/#/page/USER-TOKEN/IRoamAlone"} "/#/page/EXAMPLE-USER-TOKEN/IRoamAlone"]]
+        [:a {:href "/#/page/USER-TOKEN/IRoamAlone"} "/#/page/EXAMPLE-USER-TOKEN/IRoamAlone"]]
 
       [:p "for page photos go to "
         [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]]

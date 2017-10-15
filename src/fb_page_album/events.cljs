@@ -221,15 +221,21 @@
               status (:status clj-response)
               auth-response (:authResponse clj-response)]
           (if (= status "connected")
-            (rf/dispatch [:fb/login-success (:accessToken auth-response)])
+            (rf/dispatch [:fb/check-token-valid (:accessToken auth-response)])
             (prn "Unauthorized")))))))
+
+(rf/reg-event-db
+ :fb/set-username
+ (fn [db [_ username]]
+   (assoc db :fb/username username)))
 
 (rf/reg-event-fx
   :fb/login-success
   []
-  (fn [{:keys [db]} [_ value]]
-    { :dispatch [:api/set-access-token value]
-      :set-item ["access-token" value]
+  (fn [{:keys [db]} [_ token username]]
+    { :dispatch-n [[:api/set-access-token token]
+                   [:fb/set-username username]]
+      :set-item ["access-token" token]
       :db       db}))
 
 ;;Get Login Status
@@ -257,8 +263,10 @@
     (go (let [response (<! (http/get (str fb-graph-url "me")
                                      {:with-credentials? false
                                       :query-params {"access_token" access-token}}))
-              res-status (:status response)]
-          (>! result res-status)))
+              res-status (:status response)
+              body (:body response)
+              username (:name body)]
+          (>! result {:status res-status :username username})))
     result))
 
 (rf/reg-fx
@@ -270,9 +278,9 @@
 (rf/reg-event-fx
   :fb/check-token-valid
   (fn [{:keys [db]} [_ access-token]]
-    {:fb/check-token-valid {:response-handler (fn [code]
-                                                (if (= code 200)
-                                                  (rf/dispatch [:fb/login-success access-token])
+    {:fb/check-token-valid {:response-handler (fn [{:keys [status username]}]
+                                                (if (= status 200)
+                                                  (rf/dispatch [:fb/login-success access-token username])
                                                   (rf/dispatch [:fb/logout])))
                             :access-token     access-token}}))
 

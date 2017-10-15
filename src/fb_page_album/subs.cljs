@@ -25,3 +25,8 @@
   :api/get-page
   (fn [db _]
     (get db :api/page-id)))
+
+(rf/reg-sub
+  :fb/get-username
+  (fn [db _]
+    (get db :fb/username)))
