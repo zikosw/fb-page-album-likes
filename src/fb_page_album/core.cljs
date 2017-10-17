@@ -54,7 +54,8 @@
        {:src "/img/fblogin.png"
         :height 30
         :style {:cursor "pointer"}
-        :on-click #(rf/dispatch [:fb/login])}]]])
+        :on-click (fn []
+                    (.login js/FB #(rf/dispatch [:fb/login %])))}]]])
 (defn fb-logout-btn [username]
   [:div.panel.panel-default
    [:div.panel-body

@@ -208,21 +208,18 @@
 ;;Login
 (rf/reg-event-fx
   :fb/login
-  (fn [db [_]]
-    {:fb/login []}))
+  (fn [db [_ response]]
+    {:fb/login response}))
 
 (rf/reg-fx
   :fb/login
-  (fn [_]
-    (.login
-      js/FB
-      (fn [response]
-        (let [clj-response (js->clj response :keywordize-keys true)
-              status (:status clj-response)
-              auth-response (:authResponse clj-response)]
-          (if (= status "connected")
-            (rf/dispatch [:fb/check-token-valid (:accessToken auth-response)])
-            (prn "Unauthorized")))))))
+  (fn [response]
+    (let [clj-response (js->clj response :keywordize-keys true)
+          status (:status clj-response)
+          auth-response (:authResponse clj-response)]
+      (if (= status "connected")
+        (rf/dispatch [:fb/check-token-valid (:accessToken auth-response)])
+        (prn "Unauthorized")))))
 
 (rf/reg-event-db
  :fb/set-username
@@ -237,25 +234,6 @@
                    [:fb/set-username username]]
       :set-item ["access-token" token]
       :db       db}))
-
-;;Get Login Status
-(rf/reg-event-fx
-  :fb/get-login-status
-  (fn [db [_]]
-    {:fb/get-login-status []}))
-
-(rf/reg-fx
-  :fb/get-login-status
-  (fn [_]
-    (.getLoginStatus
-      js/FB
-      (fn [response]
-        (let [clj-response (js->clj response :keywordize-keys true)
-              status (:status clj-response)
-              auth-response (:authResponse clj-response)]
-          (if (= status "connected")
-            (rf/dispatch [:api/set-access-token (:accessToken auth-response)])
-            (rf/dispatch [:fb/login])))))))
 
 ;;Check Token is valid?
 (defn check-token-valid [access-token]
