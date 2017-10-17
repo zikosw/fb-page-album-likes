@@ -57,7 +57,7 @@
         [:div
           (str "Logged in as " username " ")
           [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]]
-        [:button {:on-click #(rf/dispatch [:fb/login])} "Login"])
+        [:button {:on-click #(.login js/FB (fn [rp] (rf/dispatch [:fb/login rp])))} "Login"])
 
       [:p "for page albums go to "
         [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
