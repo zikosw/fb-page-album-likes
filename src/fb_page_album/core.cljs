@@ -46,47 +46,77 @@
 
   (hook-browser-navigation!))
 
+(defn fb-login-btn [attr child]
+  [:div.panel.panel-default
+   [:div.panel-body
+     [:h5 "login to continue"]
+     [:img
+       {:src "/img/fblogin.png"
+        :height 30
+        :style {:cursor "pointer"}
+        :on-click (fn []
+                    (.login js/FB #(rf/dispatch [:fb/login %])))}]]])
+(defn fb-logout-btn [username]
+  [:div.panel.panel-default
+   [:div.panel-body
+     (str "Logged in as " username " ")
+     [:button.btn.btn-danger {:on-click #(rf/dispatch [:fb/logout])} "Logout"]]])
+
+(defn url-guide []
+  [:p "for page albums go to "
+   [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
+   " - eg. "
+   [:a {:href "/#/page/USER-TOKEN/IRoamAlone"} "/#/page/EXAMPLE-USER-TOKEN/IRoamAlone"]]
+  [:p "for page photos go to "
+   [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]])
+
 ;; Views
 (defn home-page []
   (let [albums @(rf/subscribe [:page/get-albums])
         logged-in? @(rf/subscribe [:api/get-access-token])
         username @(rf/subscribe [:fb/get-username])]
-    [:div
+    [:div.container
       [:h2 "Welcome"]
-      (if logged-in?
+      (if (not logged-in?)
         [:div
-          (str "Logged in as " username " ")
-          [:button {:on-click #(rf/dispatch [:fb/logout])} "Logout"]]
-        [:button {:on-click #(.login js/FB (fn [rp] (rf/dispatch [:fb/login rp])))} "Login"])
+          [fb-login-btn]
+          [:div
+           [:h3 "Screenshot Example"]
+           [:img {:src "/img/screenshot.jpg"}]]]
+        [:div
+          [fb-logout-btn username]
+          [:div.panel.panel-default
+            [:div.panel-body
+              [:div {:style {:margin-bottom 10}}
+               [:img {:src "/img/page-id.jpg"}]]
+              [:div.form-inline
+                [:input.form-control
+                 {:type "text"
+                  :style {:width 250}
+                  :placeholder "Page ID, eg. bnk48official.cherprang"
+                  :on-change #(rf/dispatch [:api/set-page (-> % .-target .-value)])}]
+                [:button.btn.btn-default
+                 {:type "button"
+                  :on-click #(rf/dispatch [:page/get-albums @(rf/subscribe [:api/get-page])])}
+                 "Get Albums!"]
+                [:button.btn.btn-default
+                 {:type "button"
+                  :on-click #(rf/dispatch [:page/get-photos @(rf/subscribe [:api/get-page])])}
+                 "Get Photos!"]]]]
 
-      [:p "for page albums go to "
-        [:a {:href "/#/page/<token>/<page-id>"} "/#/page/<token>/<page-id>"]
-        " - eg. "
-        [:a {:href "/#/page/USER-TOKEN/IRoamAlone"} "/#/page/EXAMPLE-USER-TOKEN/IRoamAlone"]]
-
-      [:p "for page photos go to "
-        [:a {:href "/#/photos/<token>/<page-id>"} "/#/photos/<token>/<page-id>"]]
-      [:hr]
-      [:div
-        [:input {:type "text"
-                 :placeholder "Page identifier"
-                 :on-change #(rf/dispatch [:api/set-page (-> % .-target .-value)])}]
-        [:button {:type "button"
-                  :on-click #(rf/dispatch [:page/get-albums @(rf/subscribe [:api/get-page])])} "Get Albums!"]
-        [:button {:type "button"
-                  :on-click #(rf/dispatch [:page/get-photos @(rf/subscribe [:api/get-page])])} "Get Photoes!"]]
-      [:div {:style {:display "flex"
-                     :flex-wrap "wrap"}}
-        (for [a albums
-              :let [id (:id a)
-                    name (:name a)
-                    likes (:likes a)
-                    cover (:cover a)]]
-          ^{:key (:id a)} [:div {:style {:flex 1}}
-                           [:a {:href (str "http://fb.com/" id) :target "_blank"}
-                             [:img {:src cover :height 200}]]
-                           [:div
-                            [:p (str name " ♥ " likes)]]])]]))
+          [:div {:style {:padding-top 10
+                         :display "flex"
+                         :flex-wrap "wrap"}}
+            (for [a albums
+                  :let [id (:id a)
+                        name (:name a)
+                        likes (:likes a)
+                        cover (:cover a)]]
+              ^{:key (:id a)} [:div {:style {:flex 1}}
+                               [:a {:href (str "http://fb.com/" id) :target "_blank"}
+                                 [:img {:src cover :height 200}]]
+                               [:div
+                                [:p (str name " ♥ " likes)]]])]])]))
 
 ;; -------------------------
 ;; Initialize app
