@@ -102,7 +102,11 @@
                 [:button.btn.btn-default
                  {:type "button"
                   :on-click #(rf/dispatch [:page/get-photos @(rf/subscribe [:api/get-page])])}
-                 "Get Photos!"]]]]
+                 "Get Photos!"]
+                [:button.btn.btn-default
+                 {:type "button"
+                  :on-click #(rf/dispatch [:page/get-videos @(rf/subscribe [:api/get-page])])}
+                 "Get Videos!"]]]]
 
           [:div {:style {:padding-top 10
                          :display "flex"

@@ -51,6 +51,8 @@
 (defn photo-url [album-id]
   (str fb-graph-url album-id "/photos"))
 
+(defn video-url [page-id]
+  (str fb-graph-url page-id "/videos"))
 
 
 (defn get-photos [images]
@@ -166,6 +168,45 @@
     (go
       (on-success (<! (fetch-page-photos page-id nil))))))
 
+(defn fetch-page-videos [page-id after]
+  (let [videos (chan)
+        access-token (rf/subscribe [:api/get-access-token])]
+    (go (let [response (<! (http/get (video-url page-id)
+                                     {:with-credentials? false
+                                      :query-params {"access_token" @access-token
+                                                     "limit" 50
+                                                     "fields" "likes.summary(true).limit(0),picture,description"
+                                                     "type" "uploaded"
+                                                     "after" after}}))  ;; MAX is 50
+                                                    ;; TODO: Implement paging
+                                                    ;;"after" "MTM5NjY4NjU4NzEwMzQzNQZDZD"}}))
+              res-status (:status response)
+              body (:body response)
+              paging (:paging body)
+              data (:data body)
+              mapped-a (map
+                         (fn [a]
+                           {:id (:id a)
+                            :name (:description a)
+                            :likes (get-likes a)
+                            :cover (:picture a)})
+                         data)]
+          (prn :status res-status)
+          (prn :p paging)
+          (prn :d (count data))
+          ;(prn :data mapped-a)
+          (doseq [p mapped-a]
+            (prn :ppp p))
+          (>! videos mapped-a)))
+    videos))
+
+(rf/reg-fx
+  :page/fetch-videos
+  (fn [{:keys [page-id on-success on-failed]}]
+    ;; TODO: Implement paging loop
+    (go
+      (on-success (<! (fetch-page-videos page-id nil))))))
+
 (comment
   (rf/dispatch [:page/get-photos "IRoamAlone"])
   (rf/dispatch [:page/get-photos "bnk48official.cherprang"])
@@ -180,6 +221,18 @@
 
 (rf/reg-event-fx
   :page/set-photos
+  (fn [{:keys [db]} [_ page-id albums]]
+    {:db (assoc db :albums albums)}))
+
+(rf/reg-event-fx
+  :page/get-videos
+  (fn [db [_ page-id]]
+    (prn :get-videos page-id)
+    {:page/fetch-videos {:page-id page-id
+                         :on-success #(rf/dispatch [:page/set-videos page-id %])}}))
+
+(rf/reg-event-fx
+  :page/set-videos
   (fn [{:keys [db]} [_ page-id albums]]
     {:db (assoc db :albums albums)}))
 
